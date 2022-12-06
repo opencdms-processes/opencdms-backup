@@ -36,20 +36,11 @@ metadata:
         name: OpenCDMS
         url: https://opencdms.org
     contact:
-        name: Lastname, Firstname
-        position: Position Title
-        address: Mailing Address
-        city: City
-        stateorprovince: Administrative Area
-        postalcode: Zip or Postal Code
-        country: Country
-        phone: +xx-xxx-xxx-xxxx
-        fax: +xx-xxx-xxx-xxxx
-        email: you@example.org
-        url: Contact URL
-        hours: Mo-Fr 08:00-17:00
-        instructions: During hours of service. Off on weekends.
-        role: pointOfContact
+        name: Admin, OpenCDMS
+        position: Admin
+        address: England
+        country: England
+        email: info@opencdms.org
 
 resources:
   opencdms_backup:

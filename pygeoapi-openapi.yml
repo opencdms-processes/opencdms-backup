@@ -140,7 +140,7 @@ components:
       type: object
 info:
   contact:
-    email: you@example.org
+    email: info@opencdms.org
     name: OpenCDMS
     url: https://opencdms.org
   description: Exposes a process that can manage periodic backup tasks
