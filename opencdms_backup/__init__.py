@@ -73,7 +73,7 @@ class OpenCDMSBackup(BaseProcessor):
         """
         Initialize object
         :param processor_def: provider definition
-        :returns: pygeoapi.process.backup.Backup
+        :returns: pygeoapi.process.opencdms_backup.Backup
         """
 
         super().__init__(processor_def, PROCESS_METADATA)
