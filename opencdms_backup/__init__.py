@@ -27,12 +27,12 @@ LOGGER = logging.getLogger(__name__)
 
 PROCESS_METADATA = {
     'version': '0.0.1',
-    'id': 'backup',
+    'id': 'opencdms_backup',
     'title': {
-        'en': 'Backup',
+        'en': 'OpenCDMS Backup',
     },
     'description': {
-        'en': 'Thperiodic backup jobs.',
+        'en': 'This pygeoapi process helps set up periodic backup jobs.',
     },
     'keywords': [],
     'links': [{
@@ -55,19 +55,19 @@ PROCESS_METADATA = {
             'keywords': []
         }
     },
-    'outputs': { },
+    'outputs': {},
     'example': {
         'inputs': {
             "value": 5
         },
-        'outputs':{
+        'outputs': {
             "result": 10
         }
     }
 }
 
 
-class Backup(BaseProcessor):
+class OpenCDMSBackup(BaseProcessor):
 
     def __init__(self, processor_def):
         """
@@ -82,10 +82,9 @@ class Backup(BaseProcessor):
         mimetype = 'application/json'
         value = data.get("example_input", None)
         output = {
-            "result": value*2
+            "result": value * 2
         }
         return mimetype, output
 
-
     def __repr__(self):
-        return '<Backup> {}'.format(self.name)
+        return '<OpenCDMSBackup> {}'.format(self.name)

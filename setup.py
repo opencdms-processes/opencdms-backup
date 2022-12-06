@@ -59,18 +59,18 @@ def get_package_version():
 
 
 KEYWORDS = [
-    backup, postgres, opencdms
+    "backup", "postgres", "opencdms"
 ]
 
-DESCRIPTION = 'Thperiodic backup jobs.'
+DESCRIPTION = 'This pygeoapi process helps set up periodic backup jobs.'
 
 # ensure a fresh MANIFEST file is generated
-if (os.path.exists('MANIFEST')):
+if os.path.exists('MANIFEST'):
     os.unlink('MANIFEST')
 
 
 setup(
-    name='backup',
+    name='opencdms_backup',
     version=get_package_version(),
     description=DESCRIPTION,
     long_description=read('README.md'),
