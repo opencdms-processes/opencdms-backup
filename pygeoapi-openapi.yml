@@ -141,17 +141,16 @@ components:
 info:
   contact:
     email: you@example.org
-    name: Organization Name
-    url: https://pygeoapi.io
-  description: pygeoapi provides an API to geospatial data
+    name: OpenCDMS
+    url: https://opencdms.org
+  description: Exposes a process that can manage periodic backup tasks
   license:
-    name: CC-BY 4.0 license
-    url: https://creativecommons.org/licenses/by/4.0/
-  termsOfService: https://creativecommons.org/licenses/by/4.0/
-  title: pygeoapi default instance
+    name: APACHE LICENSE, VERSION 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+  termsOfService: https://www.apache.org/licenses/LICENSE-2.0
+  title: OpenCDMS Backup Manager Server
   version: 0.13.0
   x-keywords:
-  - geospatial
   - data
   - api
 openapi: 3.0.2
@@ -165,11 +164,11 @@ paths:
       - $ref: '#/components/parameters/lang'
       responses:
         '200':
-          $ref: http://localhost:5000/schemas/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/LandingPage
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/LandingPage
         '400':
-          $ref: http://localhost:5000/schemas/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/InvalidParameter
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/InvalidParameter
         '500':
-          $ref: http://localhost:5000/schemas/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
       summary: Landing page
       tags:
       - server
@@ -182,11 +181,11 @@ paths:
       - $ref: '#/components/parameters/lang'
       responses:
         '200':
-          $ref: http://localhost:5000/schemas/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/Collections
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/Collections
         '400':
-          $ref: http://localhost:5000/schemas/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/InvalidParameter
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/InvalidParameter
         '500':
-          $ref: http://localhost:5000/schemas/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
       summary: Collections
       tags:
       - server
@@ -199,11 +198,11 @@ paths:
       - $ref: '#/components/parameters/lang'
       responses:
         '200':
-          $ref: http://localhost:5000/schemas/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ConformanceDeclaration
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ConformanceDeclaration
         '400':
-          $ref: http://localhost:5000/schemas/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/InvalidParameter
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/InvalidParameter
         '500':
-          $ref: http://localhost:5000/schemas/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
       summary: API conformance definition
       tags:
       - server
@@ -299,7 +298,7 @@ paths:
         '200':
           $ref: '#/components/responses/200'
         '400':
-          $ref: http://localhost:5000/schemas/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/InvalidParameter
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/InvalidParameter
         default:
           $ref: '#/components/responses/default'
       summary: This document
@@ -319,10 +318,10 @@ paths:
       summary: Processes
       tags:
       - server
-  /processes/OpenCDMSBackup:
+  /processes/opencdms_backup:
     get:
       description: This pygeoapi process helps set up periodic backup jobs.
-      operationId: describeOpencdmsbackupProcess
+      operationId: describeOpencdms_backupProcess
       parameters:
       - $ref: '#/components/parameters/f'
       responses:
@@ -332,11 +331,11 @@ paths:
           $ref: '#/components/responses/default'
       summary: Get process metadata
       tags:
-      - OpenCDMSBackup
-  /processes/OpenCDMSBackup/execution:
+      - opencdms_backup
+  /processes/opencdms_backup/execution:
     post:
       description: This pygeoapi process helps set up periodic backup jobs.
-      operationId: executeOpencdmsbackupJob
+      operationId: executeOpencdms_backupJob
       requestBody:
         content:
           application/json:
@@ -362,18 +361,18 @@ paths:
           $ref: '#/components/responses/default'
       summary: Process OpenCDMS Backup execution
       tags:
-      - OpenCDMSBackup
+      - opencdms_backup
 servers:
-- description: pygeoapi provides an API to geospatial data
+- description: Exposes a process that can manage periodic backup tasks
   url: http://localhost:5000/
 tags:
-- description: pygeoapi provides an API to geospatial data
+- description: Exposes a process that can manage periodic backup tasks
   externalDocs:
     description: information
-    url: http://example.org
+    url: https://github.com/opencdms-processes/opencdms-backup
   name: server
 - description: SpatioTemporal Asset Catalog
   name: stac
 - description: This pygeoapi process helps set up periodic backup jobs.
-  name: OpenCDMSBackup
+  name: opencdms_backup
 

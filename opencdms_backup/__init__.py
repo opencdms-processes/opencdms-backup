@@ -79,8 +79,9 @@ class OpenCDMSBackup(BaseProcessor):
         super().__init__(processor_def, PROCESS_METADATA)
 
     def execute(self, data):
+        print(data)
         mimetype = 'application/json'
-        value = data.get("example_input", None)
+        value = data.get("value", None)
         output = {
             "result": value * 2
         }
