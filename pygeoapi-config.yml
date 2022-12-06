@@ -1,0 +1,6 @@
+resources:
+  OpenCDMSBackup:
+    type: process
+    processor:
+      name: opencdms_backup.OpenCDMSBackup
+

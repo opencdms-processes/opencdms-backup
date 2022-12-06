@@ -1,2 +1,2 @@
 include LICENSE README.md requirements.txt
-recursive-include backup
+recursive-include opencdms_backup

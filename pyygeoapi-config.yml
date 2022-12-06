@@ -1,6 +1,0 @@
-resources:
-  Backup
-    type: process
-    processor:
-      name: backup.Backup
-
