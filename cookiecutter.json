@@ -7,6 +7,6 @@
   "process_id": "ID for process, imported as import process_id",
   "process_name": "Name of process class, process_id.process_name",
   "process_description": "Short description of process",
-  "keywords": [""],
-  "license": ""
+  "keywords": "",
+  "license": "APL2"
 }
