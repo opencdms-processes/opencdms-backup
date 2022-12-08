@@ -21,54 +21,49 @@
 __version__ = "0.0.1"
 
 import logging
+
+import subprocess
+from pathlib import Path
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
 
 LOGGER = logging.getLogger(__name__)
 
 PROCESS_METADATA = {
-    'version': '0.0.1',
-    'id': 'opencdms_backup',
-    'title': {
-        'en': 'OpenCDMS Backup',
+    "version": "0.0.1",
+    "id": "opencdms_backup",
+    "title": {
+        "en": "OpenCDMS Backup",
     },
-    'description': {
-        'en': 'This pygeoapi process helps set up periodic backup jobs.',
+    "description": {
+        "en": "This pygeoapi process helps set up periodic backup jobs.",
     },
-    'keywords': [],
-    'links': [{
-        'type': 'text/html',
-        'rel': 'about',
-        'title': 'information',
-        'href': 'https://example.org/process',
-        'hreflang': 'en-US'
-    }],
-    'inputs': {
-        'example_input': {
-            'title': 'value',
-            'description': 'Number to double',
-            'schema': {
-                'type': 'numeric'
-            },
-            'minOccurs': 1,
-            'maxOccurs': 1,
-            'metadata': None,
-            'keywords': []
+    "keywords": [],
+    "links": [
+        {
+            "type": "text/html",
+            "rel": "about",
+            "title": "information",
+            "href": "https://example.org/process",
+            "hreflang": "en-US",
+        }
+    ],
+    "inputs": {
+        "example_input": {
+            "title": "value",
+            "description": "Number to double",
+            "schema": {"type": "numeric"},
+            "minOccurs": 1,
+            "maxOccurs": 1,
+            "metadata": None,
+            "keywords": [],
         }
     },
-    'outputs': {},
-    'example': {
-        'inputs': {
-            "value": 5
-        },
-        'outputs': {
-            "result": 10
-        }
-    }
+    "outputs": {},
+    "example": {"inputs": {"value": 5}, "outputs": {"result": 10}},
 }
 
 
 class OpenCDMSBackup(BaseProcessor):
-
     def __init__(self, processor_def):
         """
         Initialize object
@@ -79,13 +74,32 @@ class OpenCDMSBackup(BaseProcessor):
         super().__init__(processor_def, PROCESS_METADATA)
 
     def execute(self, data):
-        print(data)
-        mimetype = 'application/json'
-        value = data.get("value", None)
-        output = {
-            "result": value * 2
-        }
+        mimetype = "application/json"
+        try:
+            db_host = data["db_host"]
+            db_port = data["db_port"]
+            db_user = data["db_user"]
+            db_pass = data["db_pass"]
+            output_file = data["output_file"]
+            project_root = Path.cwd().parent.resolve()
+            process = subprocess.Popen(
+                'crontab -l > tmp_cron && echo "00 00 * * *'
+                f" {project_root}/backup-db.sh"
+                f' {db_host} {db_port} {db_user} {db_pass} {output_file}" >>'
+                " tmp_cron && crontab tmp_cron && rm tmp_cron".split(),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            stdout, stderr = process.communicate()
+            logging.info(stdout)
+            logging.info(stderr)
+
+            output = {"message": "Backup job scheduled successfully."}
+
+        except KeyError as e:
+            output = {"error_message": e}
+
         return mimetype, output
 
     def __repr__(self):
-        return '<OpenCDMSBackup> {}'.format(self.name)
+        return "<OpenCDMSBackup> {}".format(self.name)
