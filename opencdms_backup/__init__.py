@@ -21,7 +21,6 @@
 __version__ = "0.0.1"
 
 import logging
-
 import subprocess
 from pathlib import Path
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
@@ -48,18 +47,75 @@ PROCESS_METADATA = {
         }
     ],
     "inputs": {
-        "example_input": {
-            "title": "value",
-            "description": "Number to double",
-            "schema": {"type": "numeric"},
+        "db_host": {
+            "title": "Database host",
+            "description": "Database host url.",
+            "schema": {"type": "string"},
             "minOccurs": 1,
             "maxOccurs": 1,
             "metadata": None,
             "keywords": [],
+        },
+        "db_port": {
+            "title": "Database port",
+            "description": "Port where database connection is exposed.",
+            "schema": {"type": "integer"},
+            "minOccurs": 1,
+            "maxOccurs": 1,
+            "metadata": None,
+            "keywords": [],
+        },
+        "db_user": {
+            "title": "Database username",
+            "description": "User with proper role to take backup of database.",
+            "schema": {"type": "string"},
+            "minOccurs": 1,
+            "maxOccurs": 1,
+            "metadata": None,
+            "keywords": [],
+        },
+        "db_pass": {
+            "title": "Database password",
+            "description": "Password for the given user.",
+            "schema": {"type": "string"},
+            "minOccurs": 1,
+            "maxOccurs": 1,
+            "metadata": None,
+            "keywords": [],
+        },
+        "output_dir": {
+            "title": "Output directory",
+            "description": "Directory where backup file should be stored.",
+            "schema": {"type": "string"},
+            "minOccurs": 1,
+            "maxOccurs": 1,
+            "metadata": None,
+            "keywords": [],
+        },
+        "cron_expression": {
+            "title": "CRON expression",
+            "description": (
+                "Optional cron expression to set up periodic job. If not"
+                " provided, the backup job will run everyday at midnight"
+                " (UTC)."
+            ),
+            "schema": {"type": "string"},
+            "minOccurs": 0,
+            "maxOccurs": 1,
+            "metadata": None,
+            "keywords": [],
+        },
+    },
+    "outputs": {"message": "Notifies if job was successfully ran or not."},
+    "example": {
+        "inputs": {
+            "db_host": "127.0.0.1",
+            "db_port": 25432,
+            "db_user": "postgres",
+            "db_pass": "password",
+            "output_dir": "/home/faysal/PycharmProjects/opencdms-backup",
         }
     },
-    "outputs": {},
-    "example": {"inputs": {"value": 5}, "outputs": {"result": 10}},
 }
 
 
@@ -80,24 +136,39 @@ class OpenCDMSBackup(BaseProcessor):
             db_port = data["db_port"]
             db_user = data["db_user"]
             db_pass = data["db_pass"]
-            output_file = data["output_file"]
-            project_root = Path.cwd().parent.resolve()
-            process = subprocess.Popen(
-                'crontab -l > tmp_cron && echo "00 00 * * *'
-                f" {project_root}/backup-db.sh"
-                f' {db_host} {db_port} {db_user} {db_pass} {output_file}" >>'
-                " tmp_cron && crontab tmp_cron && rm tmp_cron".split(),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-            stdout, stderr = process.communicate()
-            logging.info(stdout)
-            logging.info(stderr)
+            output_dir = data["output_dir"]
+            cron_expression = data.get("cron_expression", "00 00 * * *")
+            project_root = Path(".").parent.resolve()
+            commands = [
+                ["sh", "-c", "crontab -l > tmp_cron"],
+                [
+                    "sh",
+                    "-c",
+                    (
+                        f'echo "{cron_expression} {project_root}/backup-db.sh'
+                        f' {db_host} {db_port} {db_user} {db_pass} {output_dir}"'
+                        " >> tmp_cron"
+                    ),
+                ],
+                ["crontab", "tmp_cron"],
+                ["rm", "tmp_cron"],
+            ]
 
             output = {"message": "Backup job scheduled successfully."}
 
+            for command in commands:
+                process = subprocess.Popen(
+                    command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                )
+                stdout, stderr = process.communicate()
+                logging.info(stdout)
+                logging.info(stderr.decode("utf-8"))
+                if stderr:
+                    output = {"message": "Failed scheduling backup job."}
+                    break
+
         except KeyError as e:
-            output = {"error_message": e}
+            output = {"message": f"Required field: {str(e)}"}
 
         return mimetype, output
 

@@ -341,9 +341,11 @@ paths:
           application/json:
             example:
               inputs:
-                value: 5
-              outputs:
-                result: 10
+                db_host: 127.0.0.1
+                db_pass: password
+                db_port: 25432
+                db_user: postgres
+                output_dir: /home/faysal/PycharmProjects/opencdms-backup
             schema:
               $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas/execute.yaml
         description: Mandatory execute request JSON
@@ -375,4 +377,3 @@ tags:
   name: stac
 - description: This pygeoapi process helps set up periodic backup jobs.
   name: opencdms_backup
-
