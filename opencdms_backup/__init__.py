@@ -106,7 +106,12 @@ PROCESS_METADATA = {
             "keywords": [],
         },
     },
-    "outputs": {"message": "Notifies if job was successfully ran or not."},
+    "outputs": {
+        "message": {
+            "title": "Job execution status",
+            "schema": {"type": "string"},
+        }
+    },
     "example": {
         "inputs": {
             "db_host": "127.0.0.1",
@@ -161,7 +166,7 @@ class OpenCDMSBackup(BaseProcessor):
                     command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                 )
                 stdout, stderr = process.communicate()
-                logging.info(stdout)
+                logging.info(stdout.decode("utf-8"))
                 logging.info(stderr.decode("utf-8"))
                 if stderr:
                     output = {"message": "Failed scheduling backup job."}
