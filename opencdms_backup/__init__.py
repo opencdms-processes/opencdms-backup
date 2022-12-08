@@ -27,12 +27,12 @@ LOGGER = logging.getLogger(__name__)
 
 PROCESS_METADATA = {
     'version': '0.0.1',
-    'id': '{{cookiecutter.process_id}}',
+    'id': 'opencdms_backup',
     'title': {
-        'en': '{{cookiecutter.process_name}}',
+        'en': 'OpenCDMS Backup',
     },
     'description': {
-        'en': '{{cookiecutter.process_description}}',
+        'en': 'This pygeoapi process helps set up periodic backup jobs.',
     },
     'keywords': [],
     'links': [{
@@ -55,37 +55,37 @@ PROCESS_METADATA = {
             'keywords': []
         }
     },
-    'outputs': { },
+    'outputs': {},
     'example': {
         'inputs': {
             "value": 5
         },
-        'outputs':{
+        'outputs': {
             "result": 10
         }
     }
 }
 
 
-class {{cookiecutter.process_name}}(BaseProcessor):
+class OpenCDMSBackup(BaseProcessor):
 
     def __init__(self, processor_def):
         """
         Initialize object
         :param processor_def: provider definition
-        :returns: pygeoapi.process.{{cookiecutter.process_id}}.{{cookiecutter.process_name}}
+        :returns: pygeoapi.process.opencdms_backup.OpenCDMSBackup
         """
 
         super().__init__(processor_def, PROCESS_METADATA)
 
     def execute(self, data):
+        print(data)
         mimetype = 'application/json'
-        value = data.get("example_input", None)
+        value = data.get("value", None)
         output = {
-            "result": value*2
+            "result": value * 2
         }
         return mimetype, output
 
-
     def __repr__(self):
-        return '<{{cookiecutter.process_name}}> {}'.format(self.name)
+        return '<OpenCDMSBackup> {}'.format(self.name)

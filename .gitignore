@@ -40,3 +40,4 @@ nosetests.xml
 
 # pycharm
 .idea
+db/*

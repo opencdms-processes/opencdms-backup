@@ -1,6 +1,0 @@
-resources:
-  {{cookiecutter.process_name}}
-    type: process
-    processor:
-      name: {{cookiecutter.process_id}}.{{cookiecutter.process_name}}
-
