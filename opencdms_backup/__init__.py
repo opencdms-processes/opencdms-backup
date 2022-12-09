@@ -89,10 +89,7 @@ PROCESS_METADATA = {
     },
     "example": {
         "inputs": {
-            "db_host": "127.0.0.1",
-            "db_port": 25432,
-            "db_user": "postgres",
-            "db_pass": "password",
+            "deployment_key": "test-db",
             "output_dir": "/home/faysal/PycharmProjects/opencdms-backup",
         }
     },
