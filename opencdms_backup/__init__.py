@@ -132,7 +132,7 @@ class OpenCDMSBackup(BaseProcessor):
 
             output_dir = data["output_dir"]
             cron_expression = data.get("cron_expression", "00 00 * * *")
-            project_root = Path(".").parent.resolve()
+            project_root = Path(".").resolve()
             commands = [
                 ["sh", "-c", "crontab -l > tmp_cron"],
                 [

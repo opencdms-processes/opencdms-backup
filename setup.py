@@ -86,11 +86,6 @@ setup(
     install_requires=read('requirements.txt').splitlines(),
     packages=find_packages(),
     include_package_data=True,
-    entry_points={
-        'console_scripts': [
-            'csv2bufr=csv2bufr.cli:cli'
-        ]
-    },
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Module',
