@@ -22,8 +22,10 @@ __version__ = "0.0.1"
 
 import logging
 import subprocess
+import yaml
+import dsnparse
 from pathlib import Path
-from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
+from pygeoapi.process.base import BaseProcessor
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,36 +49,9 @@ PROCESS_METADATA = {
         }
     ],
     "inputs": {
-        "db_host": {
-            "title": "Database host",
-            "description": "Database host url.",
-            "schema": {"type": "string"},
-            "minOccurs": 1,
-            "maxOccurs": 1,
-            "metadata": None,
-            "keywords": [],
-        },
-        "db_port": {
-            "title": "Database port",
-            "description": "Port where database connection is exposed.",
-            "schema": {"type": "integer"},
-            "minOccurs": 1,
-            "maxOccurs": 1,
-            "metadata": None,
-            "keywords": [],
-        },
-        "db_user": {
-            "title": "Database username",
-            "description": "User with proper role to take backup of database.",
-            "schema": {"type": "string"},
-            "minOccurs": 1,
-            "maxOccurs": 1,
-            "metadata": None,
-            "keywords": [],
-        },
-        "db_pass": {
-            "title": "Database password",
-            "description": "Password for the given user.",
+        "deployment_key": {
+            "title": "Deployment Key",
+            "description": "OpenAPI deployment key",
             "schema": {"type": "string"},
             "minOccurs": 1,
             "maxOccurs": 1,
@@ -134,13 +109,30 @@ class OpenCDMSBackup(BaseProcessor):
 
         super().__init__(processor_def, PROCESS_METADATA)
 
+        with open("deployment.yml") as stream:
+            self.deployment_configs = yaml.load(stream, yaml.Loader)
+
+    def _read_deployment_config(self, deployment_key: str):
+        return self.deployment_configs.get(deployment_key, {}).get("DATABASE_URI", {})
+
+    def _get_db_params(self, deployment_key: str):
+        return dsnparse.parse(self._read_deployment_config(deployment_key))
+
     def execute(self, data):
         mimetype = "application/json"
+
         try:
-            db_host = data["db_host"]
-            db_port = data["db_port"]
-            db_user = data["db_user"]
-            db_pass = data["db_pass"]
+            db_params = self._get_db_params(data["deployment_key"])
+
+            db_host = db_params.host
+            if db_params.port is None:
+                db_port = 5432
+            else:
+                db_port = db_params.port
+            db_user = db_params.user
+            db_pass = db_params.password
+            db_name = db_params.database
+
             output_dir = data["output_dir"]
             cron_expression = data.get("cron_expression", "00 00 * * *")
             project_root = Path(".").parent.resolve()
@@ -151,7 +143,7 @@ class OpenCDMSBackup(BaseProcessor):
                     "-c",
                     (
                         f'echo "{cron_expression} {project_root}/backup-db.sh'
-                        f' {db_host} {db_port} {db_user} {db_pass} {output_dir}"'
+                        f' {db_host} {db_port} {db_user} {db_pass} {db_name} {output_dir}"'
                         " >> tmp_cron"
                     ),
                 ],
@@ -174,6 +166,8 @@ class OpenCDMSBackup(BaseProcessor):
 
         except KeyError as e:
             output = {"message": f"Required field: {str(e)}"}
+        except AttributeError as e:
+            output = {"message": f"Invalid db connection string."}
 
         return mimetype, output
 
