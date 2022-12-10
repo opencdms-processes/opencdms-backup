@@ -89,7 +89,7 @@ PROCESS_METADATA = {
     },
     "example": {
         "inputs": {
-            "deployment_key": "test-db",
+            "deployment_key": "test-database",
             "output_dir": "/home/faysal/PycharmProjects/opencdms-backup",
         }
     },
@@ -110,17 +110,15 @@ class OpenCDMSBackup(BaseProcessor):
             self.deployment_configs = yaml.load(stream, yaml.Loader)
 
     def _read_deployment_config(self, deployment_key: str):
-        return self.deployment_configs.get(deployment_key, {}).get("DATABASE_URI", {})
+        return self.deployment_configs.get(deployment_key, {}).get("DATABASE_URI", "")
 
     def _get_db_params(self, deployment_key: str):
         return dsnparse.parse(self._read_deployment_config(deployment_key))
 
     def execute(self, data):
         mimetype = "application/json"
-
         try:
             db_params = self._get_db_params(data["deployment_key"])
-
             db_host = db_params.host
             if db_params.port is None:
                 db_port = 5432
@@ -163,9 +161,10 @@ class OpenCDMSBackup(BaseProcessor):
 
         except KeyError as e:
             output = {"message": f"Required field: {str(e)}"}
-        except AttributeError as e:
-            output = {"message": f"Invalid db connection string."}
-
+        except AttributeError:
+            output = {"message": "Invalid db connection string."}
+        except Exception as e:
+            output = {"message": "Failed scheduling backup job."}
         return mimetype, output
 
     def __repr__(self):

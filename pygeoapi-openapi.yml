@@ -341,10 +341,7 @@ paths:
           application/json:
             example:
               inputs:
-                db_host: 127.0.0.1
-                db_pass: password
-                db_port: 25432
-                db_user: postgres
+                deployment_key: test-database
                 output_dir: /home/faysal/PycharmProjects/opencdms-backup
             schema:
               $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas/execute.yaml
