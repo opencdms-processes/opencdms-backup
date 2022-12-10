@@ -97,5 +97,6 @@ setup(
         'Topic :: Scientific/Engineering',
     ],
     cmdclass={'test': PyTest},
-    test_suite='tests.run_tests'
+    test_suite='tests.run_tests',
+    scripts=['opencdms_backup/backup-db.sh']
 )
