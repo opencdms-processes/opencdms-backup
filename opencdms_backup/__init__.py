@@ -85,7 +85,15 @@ PROCESS_METADATA = {
         "message": {
             "title": "Job execution status",
             "schema": {"type": "string"},
-        }
+        },
+        "deployment_key": {
+            "title": "Deployment key",
+            "schema": {"type": "string"},
+        },
+        "crontab_entry": {
+            "title": "Crontab entry",
+            "schema": {"type": "string"},
+        },
     },
     "example": {
         "inputs": {
@@ -131,22 +139,27 @@ class OpenCDMSBackup(BaseProcessor):
             output_dir = data["output_dir"]
             cron_expression = data.get("cron_expression", "00 00 * * *")
             project_root = Path(".").resolve()
+            crontab_entry = (
+                f"{cron_expression} {project_root}/backup-db.sh"
+                f" {db_host} {db_port} {db_user} {db_pass} {db_name} {output_dir}"
+            )
             commands = [
                 ["sh", "-c", "crontab -l > tmp_cron"],
                 [
                     "sh",
                     "-c",
-                    (
-                        f'echo "{cron_expression} {project_root}/backup-db.sh'
-                        f' {db_host} {db_port} {db_user} {db_pass} {db_name} {output_dir}"'
-                        " >> tmp_cron"
-                    ),
+                    f'echo "{crontab_entry}" >> tmp_cron',
                 ],
                 ["crontab", "tmp_cron"],
                 ["rm", "tmp_cron"],
             ]
 
-            output = {"message": "Backup job scheduled successfully."}
+            output = {
+                "message": "Backup job scheduled successfully.",
+                "deployment_key": data["deployment_key"],
+                "output_dir": data["output_dir"],
+                "crontab_entry": crontab_entry
+            }
 
             for command in commands:
                 process = subprocess.Popen(
