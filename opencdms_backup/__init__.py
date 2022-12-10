@@ -160,10 +160,13 @@ class OpenCDMSBackup(BaseProcessor):
                     break
 
         except KeyError as e:
+            LOGGER.exception(e)
             output = {"message": f"Required field: {str(e)}"}
-        except AttributeError:
+        except (AttributeError, ValueError) as e:
+            LOGGER.exception(e)
             output = {"message": "Invalid db connection string."}
         except Exception as e:
+            LOGGER.exception(e)
             output = {"message": "Failed scheduling backup job."}
         return mimetype, output
 
