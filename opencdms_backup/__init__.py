@@ -25,7 +25,8 @@ import subprocess
 import yaml
 import dsnparse
 from pathlib import Path
-from pygeoapi.process.base import BaseProcessor
+from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
+from crontab import CronTab
 
 LOGGER = logging.getLogger(__name__)
 
@@ -116,12 +117,16 @@ class OpenCDMSBackup(BaseProcessor):
 
         with open("deployment.yml") as stream:
             self.deployment_configs = yaml.load(stream, yaml.Loader)
+        self.cron = CronTab(user=True)
 
     def _read_deployment_config(self, deployment_key: str):
         return self.deployment_configs.get(deployment_key, {}).get("DATABASE_URI", "")
 
     def _get_db_params(self, deployment_key: str):
         return dsnparse.parse(self._read_deployment_config(deployment_key))
+
+    def get_existing_cron_jobs(self):
+        return {c.render() for c in self.cron.crons}
 
     def execute(self, data):
         mimetype = "application/json"
@@ -138,11 +143,16 @@ class OpenCDMSBackup(BaseProcessor):
 
             output_dir = data["output_dir"]
             cron_expression = data.get("cron_expression", "00 00 * * *")
-            project_root = Path(".").resolve()
+            project_root = Path(__file__).parent.resolve()
             crontab_entry = (
                 f"{cron_expression} {project_root}/backup-db.sh"
                 f" {db_host} {db_port} {db_user} {db_pass} {db_name} {output_dir}"
             )
+            cron_job = self.cron.new(crontab_entry)
+
+            if cron_job.render() in self.get_existing_cron_jobs():
+                raise ProcessorExecuteError("Cron job already exists for same schedule.")
+
             commands = [
                 ["sh", "-c", "crontab -l > tmp_cron"],
                 [
@@ -178,6 +188,8 @@ class OpenCDMSBackup(BaseProcessor):
         except (AttributeError, ValueError) as e:
             LOGGER.exception(e)
             output = {"message": "Invalid db connection string."}
+        except ProcessorExecuteError as e:
+            output = {"message": str(e)}
         except Exception as e:
             LOGGER.exception(e)
             output = {"message": "Failed scheduling backup job."}
