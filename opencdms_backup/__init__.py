@@ -148,9 +148,9 @@ class OpenCDMSBackup(BaseProcessor):
                 f"{cron_expression} {project_root}/backup-db.sh"
                 f" {db_host} {db_port} {db_user} {db_pass} {db_name} {output_dir}"
             )
+            existing_cron_jobs = self.get_existing_cron_jobs()
             cron_job = self.cron.new(crontab_entry)
-
-            if cron_job.render() in self.get_existing_cron_jobs():
+            if cron_job.render() in existing_cron_jobs:
                 raise ProcessorExecuteError("Cron job already exists for same schedule.")
 
             commands = [
