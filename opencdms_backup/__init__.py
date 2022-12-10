@@ -26,7 +26,6 @@ import yaml
 import dsnparse
 from pathlib import Path
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
-from crontab import CronTab
 
 LOGGER = logging.getLogger(__name__)
 
@@ -105,6 +104,22 @@ PROCESS_METADATA = {
 }
 
 
+def existing_cron_jobs():
+    process = subprocess.Popen(
+        ["sh", "-c", "crontab -l"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    stdout, stderr = process.communicate()
+    return set(
+        filter(
+            lambda x: bool(x),
+            [
+                c.strip()
+                for c in stdout.decode("utf-8").split("\n")
+            ]
+        )
+    )
+
+
 class OpenCDMSBackup(BaseProcessor):
     def __init__(self, processor_def):
         """
@@ -117,16 +132,12 @@ class OpenCDMSBackup(BaseProcessor):
 
         with open("deployment.yml") as stream:
             self.deployment_configs = yaml.load(stream, yaml.Loader)
-        self.cron = CronTab(user=True)
 
     def _read_deployment_config(self, deployment_key: str):
         return self.deployment_configs.get(deployment_key, {}).get("DATABASE_URI", "")
 
     def _get_db_params(self, deployment_key: str):
         return dsnparse.parse(self._read_deployment_config(deployment_key))
-
-    def get_existing_cron_jobs(self):
-        return {c.render() for c in self.cron.crons}
 
     def execute(self, data):
         mimetype = "application/json"
@@ -148,9 +159,7 @@ class OpenCDMSBackup(BaseProcessor):
                 f"{cron_expression} {project_root}/backup-db.sh"
                 f" {db_host} {db_port} {db_user} {db_pass} {db_name} {output_dir}"
             )
-            existing_cron_jobs = self.get_existing_cron_jobs()
-            cron_job = self.cron.new(crontab_entry)
-            if cron_job.render() in existing_cron_jobs:
+            if crontab_entry in existing_cron_jobs():
                 raise ProcessorExecuteError("Cron job already exists for same schedule.")
 
             commands = [

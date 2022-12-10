@@ -2,4 +2,3 @@ pygeoapi==0.13.0
 Flask-Cors==3.0.10
 PyYAML==6.0
 dsnparse==0.1.15
-python-crontab==2.6.0
