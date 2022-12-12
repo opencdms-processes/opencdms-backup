@@ -36,7 +36,7 @@ PROCESS_METADATA = {
         "en": "OpenCDMS Backup",
     },
     "description": {
-        "en": "This pygeoapi process helps set up periodic backup jobs.",
+        "en": "This pygeoapi process takes backup of postgresql databases.",
     },
     "keywords": [],
     "links": [
@@ -51,7 +51,7 @@ PROCESS_METADATA = {
     "inputs": {
         "deployment_key": {
             "title": "Deployment Key",
-            "description": "OpenAPI deployment key",
+            "description": "OpenCDMS deployment key",
             "schema": {"type": "string"},
             "minOccurs": 1,
             "maxOccurs": 1,
@@ -66,20 +66,7 @@ PROCESS_METADATA = {
             "maxOccurs": 1,
             "metadata": None,
             "keywords": [],
-        },
-        "cron_expression": {
-            "title": "CRON expression",
-            "description": (
-                "Optional cron expression to set up periodic job. If not"
-                " provided, the backup job will run everyday at midnight"
-                " (UTC)."
-            ),
-            "schema": {"type": "string"},
-            "minOccurs": 0,
-            "maxOccurs": 1,
-            "metadata": None,
-            "keywords": [],
-        },
+        }
     },
     "outputs": {
         "message": {
@@ -90,34 +77,23 @@ PROCESS_METADATA = {
             "title": "Deployment key",
             "schema": {"type": "string"},
         },
-        "crontab_entry": {
-            "title": "Crontab entry",
+        "database_name": {
+            "title": "Database name",
             "schema": {"type": "string"},
         },
+        "database_host": {
+            "title": "Database host",
+            "schema": {"type": "string"},
+        }
     },
     "example": {
+        "mode": "async",
         "inputs": {
             "deployment_key": "test-database",
             "output_dir": "/home/faysal/PycharmProjects/opencdms-backup",
         }
     },
 }
-
-
-def existing_cron_jobs():
-    process = subprocess.Popen(
-        ["sh", "-c", "crontab -l"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    stdout, stderr = process.communicate()
-    return set(
-        filter(
-            lambda x: bool(x),
-            [
-                c.strip()
-                for c in stdout.decode("utf-8").split("\n")
-            ]
-        )
-    )
 
 
 class OpenCDMSBackup(BaseProcessor):
@@ -153,44 +129,27 @@ class OpenCDMSBackup(BaseProcessor):
             db_name = db_params.database
 
             output_dir = data["output_dir"]
-            cron_expression = data.get("cron_expression", "00 00 * * *")
             project_root = Path(__file__).parent.resolve()
-            crontab_entry = (
-                f"{cron_expression} {project_root}/backup-db.sh"
+            backup_command = (
+                f"{project_root}/backup-db.sh"
                 f" {db_host} {db_port} {db_user} {db_pass} {db_name} {output_dir}"
             )
-            if crontab_entry in existing_cron_jobs():
-                raise ProcessorExecuteError("Cron job already exists for same schedule.")
 
-            commands = [
-                ["sh", "-c", "crontab -l > tmp_cron"],
-                [
-                    "sh",
-                    "-c",
-                    f'echo "{crontab_entry}" >> tmp_cron',
-                ],
-                ["crontab", "tmp_cron"],
-                ["rm", "tmp_cron"],
-            ]
-
-            output = {
-                "message": "Backup job scheduled successfully.",
-                "deployment_key": data["deployment_key"],
-                "output_dir": data["output_dir"],
-                "crontab_entry": crontab_entry
-            }
-
-            for command in commands:
-                process = subprocess.Popen(
-                    command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                )
-                stdout, stderr = process.communicate()
-                logging.info(stdout.decode("utf-8"))
-                logging.info(stderr.decode("utf-8"))
-                if stderr:
-                    output = {"message": "Failed scheduling backup job."}
-                    break
-
+            process = subprocess.Popen(
+                backup_command.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+            stdout, stderr = process.communicate()
+            logging.info(stdout.decode("utf-8"))
+            logging.info(stderr.decode("utf-8"))
+            if stderr:
+                output = {"message": "Failed scheduling backup job."}
+            else:
+                output = {
+                    "message": "Backup job ran successfully.",
+                    "output_dir": data["output_dir"],
+                    "database_host": db_host,
+                    "database_name": db_name
+                }
         except KeyError as e:
             LOGGER.exception(e)
             output = {"message": f"Required field: {str(e)}"}
@@ -201,7 +160,7 @@ class OpenCDMSBackup(BaseProcessor):
             output = {"message": str(e)}
         except Exception as e:
             LOGGER.exception(e)
-            output = {"message": "Failed scheduling backup job."}
+            output = {"message": "Failed running backup job."}
         return mimetype, output
 
     def __repr__(self):

@@ -343,6 +343,7 @@ paths:
               inputs:
                 deployment_key: test-database
                 output_dir: /home/faysal/PycharmProjects/opencdms-backup
+              mode: async
             schema:
               $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas/execute.yaml
         description: Mandatory execute request JSON
@@ -374,3 +375,4 @@ tags:
   name: stac
 - description: This pygeoapi process helps set up periodic backup jobs.
   name: opencdms_backup
+

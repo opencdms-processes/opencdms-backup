@@ -27,4 +27,4 @@ BACKUP_FILE="${OUTPUT_DIR}/ALL_DB_BACKUP_${DOW^^}.sql"
 
 export PGPASSWORD=$DB_PASS
 
-pg_dumpall --host "$DB_HOST" --port "$DB_PORT" --username "$DB_USER" --dbname "$DB_NAME" --no-privileges --file "$BACKUP_FILE"
+pg_dump --host "$DB_HOST" --port "$DB_PORT" --username "$DB_USER" --dbname "$DB_NAME" --no-privileges --file "$BACKUP_FILE"
