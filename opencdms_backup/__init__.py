@@ -91,7 +91,7 @@ PROCESS_METADATA = {
         "mode": "async",
         "inputs": {
             "deployment_key": "test-database",
-            "output_dir": Path.cwd().resolve(),
+            "output_dir": Path.cwd().resolve().as_posix(),
         }
     },
 }
