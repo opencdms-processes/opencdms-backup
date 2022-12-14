@@ -28,6 +28,7 @@ from pathlib import Path
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
 
 LOGGER = logging.getLogger(__name__)
+PROJECT_ROOT = Path(__file__).parent.resolve()
 
 PROCESS_METADATA = {
     "version": "0.0.1",
@@ -90,7 +91,7 @@ PROCESS_METADATA = {
         "mode": "async",
         "inputs": {
             "deployment_key": "test-database",
-            "output_dir": "/home/faysal/PycharmProjects/opencdms-backup",
+            "output_dir": Path.cwd().resolve(),
         }
     },
 }
@@ -129,9 +130,8 @@ class OpenCDMSBackup(BaseProcessor):
             db_name = db_params.database
 
             output_dir = data["output_dir"]
-            project_root = Path(__file__).parent.resolve()
             backup_command = (
-                f"{project_root}/backup-db.sh"
+                f"{PROJECT_ROOT}/backup-db.sh"
                 f" {db_host} {db_port} {db_user} {db_pass} {db_name} {output_dir}"
             )
 
