@@ -62,7 +62,7 @@ KEYWORDS = [
     "backup", "postgres", "opencdms"
 ]
 
-DESCRIPTION = 'This pygeoapi process helps set up periodic backup jobs.'
+DESCRIPTION = 'This pygeoapi process helps set up backup jobs.'
 
 # ensure a fresh MANIFEST file is generated
 if os.path.exists('MANIFEST'):
