@@ -62,7 +62,7 @@ KEYWORDS = [
     "backup", "postgres", "opencdms"
 ]
 
-DESCRIPTION = 'This pygeoapi process helps set up periodic backup jobs.'
+DESCRIPTION = 'This pygeoapi process helps set up backup jobs.'
 
 # ensure a fresh MANIFEST file is generated
 if os.path.exists('MANIFEST'):
@@ -86,11 +86,6 @@ setup(
     install_requires=read('requirements.txt').splitlines(),
     packages=find_packages(),
     include_package_data=True,
-    entry_points={
-        'console_scripts': [
-            'csv2bufr=csv2bufr.cli:cli'
-        ]
-    },
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Module',
@@ -102,5 +97,6 @@ setup(
         'Topic :: Scientific/Engineering',
     ],
     cmdclass={'test': PyTest},
-    test_suite='tests.run_tests'
+    test_suite='tests.run_tests',
+    scripts=['opencdms_backup/backup-db.sh']
 )

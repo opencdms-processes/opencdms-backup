@@ -21,54 +21,83 @@
 __version__ = "0.0.1"
 
 import logging
+import subprocess
+import yaml
+import dsnparse
+from pathlib import Path
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
 
 LOGGER = logging.getLogger(__name__)
+PROJECT_ROOT = Path(__file__).parent.resolve()
 
 PROCESS_METADATA = {
-    'version': '0.0.1',
-    'id': 'opencdms_backup',
-    'title': {
-        'en': 'OpenCDMS Backup',
+    "version": "0.0.1",
+    "id": "opencdms_backup",
+    "title": {
+        "en": "OpenCDMS Backup",
     },
-    'description': {
-        'en': 'This pygeoapi process helps set up periodic backup jobs.',
+    "description": {
+        "en": "This pygeoapi process takes backup of postgresql databases.",
     },
-    'keywords': [],
-    'links': [{
-        'type': 'text/html',
-        'rel': 'about',
-        'title': 'information',
-        'href': 'https://example.org/process',
-        'hreflang': 'en-US'
-    }],
-    'inputs': {
-        'example_input': {
-            'title': 'value',
-            'description': 'Number to double',
-            'schema': {
-                'type': 'numeric'
-            },
-            'minOccurs': 1,
-            'maxOccurs': 1,
-            'metadata': None,
-            'keywords': []
+    "keywords": [],
+    "links": [
+        {
+            "type": "text/html",
+            "rel": "about",
+            "title": "information",
+            "href": "https://example.org/process",
+            "hreflang": "en-US",
         }
-    },
-    'outputs': {},
-    'example': {
-        'inputs': {
-            "value": 5
+    ],
+    "inputs": {
+        "deployment_key": {
+            "title": "Deployment Key",
+            "description": "OpenCDMS deployment key",
+            "schema": {"type": "string"},
+            "minOccurs": 1,
+            "maxOccurs": 1,
+            "metadata": None,
+            "keywords": [],
         },
-        'outputs': {
-            "result": 10
+        "output_dir": {
+            "title": "Output directory",
+            "description": "Directory where backup file should be stored.",
+            "schema": {"type": "string"},
+            "minOccurs": 1,
+            "maxOccurs": 1,
+            "metadata": None,
+            "keywords": [],
         }
-    }
+    },
+    "outputs": {
+        "message": {
+            "title": "Job execution status",
+            "schema": {"type": "string"},
+        },
+        "deployment_key": {
+            "title": "Deployment key",
+            "schema": {"type": "string"},
+        },
+        "database_name": {
+            "title": "Database name",
+            "schema": {"type": "string"},
+        },
+        "database_host": {
+            "title": "Database host",
+            "schema": {"type": "string"},
+        }
+    },
+    "example": {
+        "mode": "async",
+        "inputs": {
+            "deployment_key": "test-database",
+            "output_dir": Path.cwd().resolve().as_posix(),
+        }
+    },
 }
 
 
 class OpenCDMSBackup(BaseProcessor):
-
     def __init__(self, processor_def):
         """
         Initialize object
@@ -78,14 +107,61 @@ class OpenCDMSBackup(BaseProcessor):
 
         super().__init__(processor_def, PROCESS_METADATA)
 
+        with open("deployment.yml") as stream:
+            self.deployment_configs = yaml.load(stream, yaml.Loader)
+
+    def _read_deployment_config(self, deployment_key: str):
+        return self.deployment_configs.get(deployment_key, {}).get("DATABASE_URI", "")
+
+    def _get_db_params(self, deployment_key: str):
+        return dsnparse.parse(self._read_deployment_config(deployment_key))
+
     def execute(self, data):
-        print(data)
-        mimetype = 'application/json'
-        value = data.get("value", None)
-        output = {
-            "result": value * 2
-        }
+        mimetype = "application/json"
+        try:
+            db_params = self._get_db_params(data["deployment_key"])
+            db_host = db_params.host
+            if db_params.port is None:
+                db_port = 5432
+            else:
+                db_port = db_params.port
+            db_user = db_params.user
+            db_pass = db_params.password
+            db_name = db_params.database
+
+            output_dir = data["output_dir"]
+            backup_command = (
+                f"{PROJECT_ROOT}/backup-db.sh"
+                f" {db_host} {db_port} {db_user} {db_pass} {db_name} {output_dir}"
+            )
+
+            process = subprocess.Popen(
+                backup_command.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+            stdout, stderr = process.communicate()
+            logging.info(stdout.decode("utf-8"))
+            logging.info(stderr.decode("utf-8"))
+            if stderr:
+                output = {"message": "Failed scheduling backup job."}
+            else:
+                output = {
+                    "message": "Backup job ran successfully.",
+                    "output_dir": data["output_dir"],
+                    "database_host": db_host,
+                    "database_name": db_name
+                }
+        except KeyError as e:
+            LOGGER.exception(e)
+            output = {"message": f"Required field: {str(e)}"}
+        except (AttributeError, ValueError) as e:
+            LOGGER.exception(e)
+            output = {"message": "Invalid db connection string."}
+        except ProcessorExecuteError as e:
+            output = {"message": str(e)}
+        except Exception as e:
+            LOGGER.exception(e)
+            output = {"message": "Failed running backup job."}
         return mimetype, output
 
     def __repr__(self):
-        return '<OpenCDMSBackup> {}'.format(self.name)
+        return "<OpenCDMSBackup> {}".format(self.name)

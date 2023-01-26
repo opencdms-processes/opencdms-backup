@@ -320,7 +320,7 @@ paths:
       - server
   /processes/opencdms_backup:
     get:
-      description: This pygeoapi process helps set up periodic backup jobs.
+      description: This pygeoapi process takes backup of postgresql databases.
       operationId: describeOpencdms_backupProcess
       parameters:
       - $ref: '#/components/parameters/f'
@@ -334,16 +334,16 @@ paths:
       - opencdms_backup
   /processes/opencdms_backup/execution:
     post:
-      description: This pygeoapi process helps set up periodic backup jobs.
+      description: This pygeoapi process takes backup of postgresql databases.
       operationId: executeOpencdms_backupJob
       requestBody:
         content:
           application/json:
             example:
               inputs:
-                value: 5
-              outputs:
-                result: 10
+                deployment_key: test-database
+                output_dir: /home/faysal/PycharmProjects/opencdms-backup
+              mode: async
             schema:
               $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas/execute.yaml
         description: Mandatory execute request JSON
@@ -373,6 +373,6 @@ tags:
   name: server
 - description: SpatioTemporal Asset Catalog
   name: stac
-- description: This pygeoapi process helps set up periodic backup jobs.
+- description: This pygeoapi process takes backup of postgresql databases.
   name: opencdms_backup
 
